@@ -149,8 +149,6 @@ class CanvasManager {
     this.#ctx.lineWidth = options.girth;
     this.#fontSize = options.size;
 
-    console.log(this.#ctx);
-
     return this;
   }
 
@@ -179,17 +177,18 @@ class CanvasManager {
 
 let canvasManager = new CanvasManager(canvas, ctx);
 
-image.onload = function (ev) {
-  // delete and recreate canvas do untaint it
+function updateCanvas(){
+    // delete and recreate canvas do untaint it
   canvas.outerHTML = "";
   canvas = document.createElement("canvas");
   canvasWrapper.appendChild(canvas);
+  canvas.classList.add('w-full', 'max-w-[500px]', 'max-h-[800px]');
   ctx = canvas.getContext("2d");
   canvasManager = new CanvasManager(canvas, ctx);
-  document.getElementById("trueSize").click();
-  document.getElementById("trueSize").click();
   draw();
-};
+}
+
+image.onload = updateCanvas;
 
 document.getElementById("imgFile").onchange = function (ev) {
   var reader = new FileReader();
@@ -211,14 +210,6 @@ document.getElementById("textSizeTop").oninput = function (ev) {
   draw();
   const strValue = value < 10 ? `0${value}` : value.toString();
   document.getElementById("textSizeTopOut").innerHTML = strValue;
-};
-
-document.getElementById("trueSize").onchange = function (ev) {
-  if (document.getElementById("trueSize").checked) {
-    canvas.classList.remove("fullwidth");
-  } else {
-    canvas.classList.add("fullwidth");
-  }
 };
 
 document.getElementById("export").onclick = function () {
@@ -277,3 +268,4 @@ tempalteManager.load("/templates.json").then(() => {
 document.getElementById("textSizeTop").value = textSizeTop;
 document.getElementById("textSizeTopOut").innerHTML = textSizeTop;
 document.getElementById("textTop").value = textTop;
+updateCanvas();

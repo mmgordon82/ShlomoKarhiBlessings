@@ -25,9 +25,3 @@ body{
   opacity: 0;
   animation: float .5s .5s ease-out forwards;
 }
-.fullwidth {
-  width: 100%;
-  max-width: 500px;
-  max-height: 800px;
-}
-
