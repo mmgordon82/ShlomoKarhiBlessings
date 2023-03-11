@@ -12,7 +12,8 @@
 }
 
 body{
- background: url("assets/Flag_of_Israel.svg") no-repeat center center; 
+ background: url("assets/Flag_of_Israel.svg") no-repeat center center;
+ background-size: cover; 
 }
 
 .main-content{
@@ -24,4 +25,5 @@ body{
   border-radius: 1rem;
   opacity: 0;
   animation: float .5s .5s ease-out forwards;
+  max-width: 1000px;
 }
