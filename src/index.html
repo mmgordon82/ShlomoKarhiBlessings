@@ -1,86 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>אתר הברכות של שלמה קרעי</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
-    <link rel="stylesheet" href="./style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              israel: "#3b52b9",
+            },
+            fontFamily: {
+              roboto: ["Roboto", "ui-sans-serif", "system-ui"],
+            },
+          },
+        },
+      };
+    </script>
+    <script src="vendors/font-awesome.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body dir="rtl" class="grid place-items-center min-h-screen">
+    <main
+      class="max-md:flex max-md:flex-col md:grid md:grid-cols-2 w-10/12 m-auto main-content"
+    >
+      <h1
+        class="text-israel border-dashed border-israel border-b font-roboto font-bold text-4xl sm:max-md:text-2xl max-md:text-center col-span-2 pb-3 mb-3"
+      >
+        אתר הברכות של שלמה קרעי
+      </h1>
+      <section class="pl-2 max-md:order-2">
+        <section class="mb-5">
+          <span class="block text-xl text-gray-800 mb-3"
+            ><i class="fa-solid fa-image pl-2"></i>בחר תמונה</span
+          >
+          <div
+            id="templatesContainer"
+            class="flex gap-1 justify-around w-full flex-wrap"
+          >
+            <!-- add upload from device -->
+            <input
+              id="imgFile"
+              type="file"
+              accept="image/*"
+              hidden
+              aria-hidden="true"
+            />
+            <label
+              class="cursor-pointer hover:text-israel hover:border-2 hover:rounded transition-all w-12 h-12 border-israel border-round border grid place-items-center rounded-[50%]"
+              for="imgFile"
+            >
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </label>
+          </div>
+        </section>
+        <section class="mb-5">
+          <span class="block text-xl text-gray-800 mb-3">
+            <i class="fa-solid fa-font pl-2"></i>תוכן
+          </span>
+          <input
+            id="textTop"
+            type="text"
+            class="block w-full py-3 px-2 rounded-none border-b-2 border-b-gray-600 focus:outline-none focus:border-b-[3px] transition-all"
+            placeholder="הכנס טקסט כאן"
+          />
+        </section>
+        <section class="mb-5">
+          <span class="block text-xl text-gray-800">
+            <i class="fa-solid fa-text-height pl-2"></i>
+            גודל גופן
+            <span class="w-[4ch]">
+              [<span id="textSizeTopOut" class="text-sm">10</span>]
+            </span>
+          </span>
+          <input
+            dir="ltr"
+            id="textSizeTop"
+            type="range"
+            min="2"
+            max="50"
+            class="w-3/4 h-1 mb-6 bg-gray-200 rounded-lg appearance-none cursor-pointer range-sm dark:bg-gray-700"
+          />
+        </section>
+        <section class="mb-5">
+          <button
+            id="export"
+            dir="ltr"
+            class="block m-auto w-2/3 px-8 py-4 text-white font-semibold bg-green-500 hover:bg-green-600 focus:bg-green-600 rounded-lg"
+          >
+            הורדה
+          </button>
+          <p class="text-gray-500 w-full mt-2">
+            *אם הכפתור לא עובד, לחצו מקש ימני על המימ ושמרו את התמונה ידנית.
+          </p>
+        </section>
+      </section>
 
-</head>
-<body>
-<h1>אתר הברכות של שלמה קרעי</h1>
-
-<div class="box">
-    <div>
-        <div id="canvasWrapper">
+      <div class="max-md:order-1">
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="MainCanvas" height="500" width="500"></canvas>
         </div>
-    </div>
-
-
-    <div>
-        <h3><i class="fa fa-picture-o fa-fw" aria-hidden="true"></i>בחר תמונה</h3>
-        <div class="box">
-            <div>
-                <p>From URL</p>
-                <input id="imgURL" class="block" type="text" placeholder="Link to image"/>
-            </div>
-            <div>
-                <p>From Local Disk</p>
-                <input id="imgFile" type="file" accept="image/*"/>
-                <label for="imgFile" class="btn"><i class="fa fa-upload fa-fw"></i></label>
-            </div>
-        </div>
-
-
-        <h3><i class="fa fa-commenting-o fa-fw" aria-hidden="true"></i>Meme Text</h3>
-        <div class="box">
-            <div>
-                <p>Top Text</p>
-                <input id="textTop" type="text" class="block" placeholder="Top text"/>
-            </div>
-            <div>
-                <p>Bottom Text</p>
-                <input id="textBottom" type="text" class="block" placeholder="Bottom text"/>
-            </div>
-        </div>
-
-
-        <h3><i class="fa fa-text-height fa-fw" aria-hidden="true"></i>Text Size</h3>
-        <div class="box">
-            <div>
-                <p>Top Text: <span id="textSizeTopOut">10</span></p>
-                <input id="textSizeTop" type="range" min="2" max="50" step="2"/>
-            </div>
-            <div>
-                <p>Bottom Text: <span id="textSizeBottomOut">10</span></p>
-                <input id="textSizeBottom" type="range" min="2" max="50" step="2"/>
-            </div>
-        </div>
-
-
-        <div class="box">
-            <div>
-                <h3><i class="fa fa-eye fa-fw" aria-hidden="true"></i>Preview Size</h3>
-                <input id="trueSize" type="checkbox"/>
-                <label for="trueSize"><span>Show true size</span></label>
-            </div>
-
-
-            <div>
-                <h3><i class="fa fa-download fa-fw" aria-hidden="true"></i>Export</h3>
-                <p>If the button doesn't work, right-click the image and save it</p>
-                <p>If you are one mobile, download the source image and directly upload it</p>
-                <button id="export">Export!</button>
-            </div>
-
-        </div>
-
-
-    </div>
-</div>
-<script src="./script.js"></script>
-
-</body>
+      </div>
+    </main>
+    <script defer src="./script.js"></script>
+  </body>
 </html>

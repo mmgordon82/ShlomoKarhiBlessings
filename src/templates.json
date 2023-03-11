@@ -1,0 +1,20 @@
+[
+    {
+        "id":"karhi-template1",
+        "url":"templates/Karhi-Template1.jpg",
+        "textPosition": {
+            "top": 400,
+            "left": 850,
+            "max": 500
+        }
+    },
+    {
+        "id":"karhi-template2",
+        "url":"templates/Karhi-Template2.jpg",
+        "textPosition": {
+            "top": 200,
+            "left": 820,
+            "max": 550
+        }
+    }
+]
