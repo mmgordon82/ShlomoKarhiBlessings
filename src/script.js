@@ -1,6 +1,4 @@
 // TODO: add templates like meme generator
-// TODO: add text positioning support
-// TODO: font-awesome config
 
 var canvas = document.getElementById("MainCanvas");
 var canvasWrapper = document.getElementById("canvasWrapper");
@@ -277,3 +275,4 @@ tempalteManager.load("/templates.json").then(() => {
 });
 document.getElementById("textSizeTop").value = textSizeTop;
 document.getElementById("textSizeTopOut").innerHTML = textSizeTop;
+document.getElementById("textTop").value = textTop;
