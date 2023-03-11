@@ -1,228 +1,279 @@
-// CAN\NVAS.js plugin
-// ninivert, december 2016
-(function (window, document) {
-  /**
-  * CAN\VAS Plugin - Adding line breaks to canvas
-  * @arg {string} [str=Hello World] - text to be drawn
-  * @arg {number} [x=0]             - top left x coordinate of the text
-  * @arg {number} [y=textSize]      - top left y coordinate of the text
-  * @arg {number} [w=canvasWidth]   - maximum width of drawn text
-  * @arg {number} [lh=1]            - line height
-  * @arg {number} [method=fill]     - text drawing method, if 'none', text will not be rendered
-  */
+// TODO: add templates like meme generator
+// TODO: add text positioning support
+// TODO: font-awesome config
 
-	CanvasRenderingContext2D.prototype.drawBreakingText = function (str, x, y, w, lh, method) {
-		// local variables and defaults
-		var textSize = parseInt(this.font.replace(/\D/gi, ''));
-		var textParts = [];
-		var textPartsNo = 0;
-		var words = [];
-		var currLine = '';
-		var testLine = '';
-		str = str || '';
-		x = x || 0;
-		y = y || 0;
-		w = w || this.canvas.width;
-		lh = lh || 1;
-		method = method || 'fill';
-
-		// manual linebreaks
-		textParts = str.split('\n');
-		textPartsNo = textParts.length;
-
-		// split the words of the parts
-		for (var i = 0; i < textParts.length; i++) {
-			words[i] = textParts[i].split(' ');
-		}
-
-		// now that we have extracted the words
-		// we reset the textParts
-		textParts = [];
-
-		// calculate recommended line breaks
-		// split between the words
-		for (var i = 0; i < textPartsNo; i++) {
-
-			// clear the testline for the next manually broken line
-			currLine = '';
-
-			for (var j = 0; j < words[i].length; j++) {
-				testLine = currLine + words[i][j] + ' ';
-
-				// check if the testLine is of good width
-				if (this.measureText(testLine).width > w && j > 0) {
-					textParts.push(currLine);
-					currLine = words[i][j] + ' ';
-				} else {
-					currLine = testLine;
-				}
-			}
-      // replace is to remove trailing whitespace
-			textParts.push(currLine);
-		}
-
-		// render the text on the canvas
-		for (var i = 0; i < textParts.length; i++) {
-			if (method === 'fill') {
-				this.fillText(textParts[i].replace(/((\s*\S+)*)\s*/, '$1'), x, y+(textSize*lh*i));
-			} else if (method === 'stroke') {
-				this.strokeText(textParts[i].replace(/((\s*\S+)*)\s*/, '$1'), x, y+(textSize*lh*i));
-			} else if (method === 'none') {
-        return {'textParts': textParts, 'textHeight': textSize*lh*textParts.length};
-			} else {
-        console.warn('drawBreakingText: ' + method + 'Text() does not exist');
-				return false;
-			}
-		}
-
-		return {'textParts': textParts, 'textHeight': textSize*lh*textParts.length};
-	};
-}) (window, document);
-
-
-
-
-
-var canvas = document.createElement('canvas');
-var canvasWrapper = document.getElementById('canvasWrapper');
+var canvas = document.getElementById("MainCanvas");
+var canvasWrapper = document.getElementById("canvasWrapper");
 canvasWrapper.appendChild(canvas);
 canvas.width = 500;
 canvas.height = 500;
-var ctx = canvas.getContext('2d');
+var ctx = canvas.getContext("2d");
 var padding = 15;
-var textTop = 'i don\'t always make a meme';
-var textBottom = 'but when i do, i use ninivert\'s generator';
-var textSizeTop = 10;
-var textSizeBottom = 10;
-var image = document.createElement('img');
+var textTop = "לכו לעזאזל כולכם";
+var textSizeTop = 20;
+var image = document.createElement("img");
 
+const DEFAULT_TEXT_POSITION = {
+  top: 0,
+  left: 0,
+  max: canvas.width * .9
+}
+var textPosition = DEFAULT_TEXT_POSITION;
 
+class TempalteManager {
+  #container;
+  #groupName;
+  #isFirst = true;
+  #dataList = [];
 
+  constructor(selector, name = "temaplte-image") {
+    this.#groupName = name;
+    this.#container = document.querySelector(selector);
+    if (!this.#container) {
+      throw new Error(`selector "${selector}" not found`);
+    }
+  }
 
+  async load(route) {
+    await fetch(route)
+      .then((res) => res.json())
+      .then((res) => res.forEach(this.addTemplate));
+  }
+
+  pickTemplate(index){
+    let data = this.#dataList[index];
+    if(!data) return;
+    this.#_pickTemplate(data.url, data.textPosition);
+  }
+
+  #_pickTemplate = (url, newTextPosition) => {
+    image.src = url;
+    textPosition = newTextPosition;
+  }
+
+  addTemplate = (data) => {
+    this.#dataList.push(data);
+    const { id, url, textPosition } = data
+    //input
+    const input = document.createElement("input");
+    input.hidden = true;
+    input.classList.add(`peer/${id}`);
+    input.type = "radio";
+    input.value = id;
+    input.name = this.#groupName;
+    input.id = id;
+    input.oninput = this.createOnSelectCb(url, textPosition);
+    if (this.#isFirst) {
+      input.checked = true;
+      this.#isFirst = false;
+    }
+
+    //image wrapper
+    const label = document.createElement("label");
+    label.classList.add(
+      "cursor-pointer",
+      "w-12",
+      "h-12",
+      "border-blue-500",
+      `peer-checked/${id}:cursor-default`,
+      `peer-checked/${id}:border-2`
+    );
+    label.setAttribute("for", id);
+    label.setAttribute("data-generated", "true");
+
+    //image
+    const img = document.createElement("img");
+    img.classList.add("w-full");
+    img.src = url;
+
+    label.appendChild(img);
+
+    let container = this.#container;
+    let first = container.firstChild;
+    container.insertBefore(input, first);
+    container.insertBefore(label, first);
+  };
+
+  createOnSelectCb = (url, newTextPosition) => () => {
+    this.#_pickTemplate(url, newTextPosition);
+  };
+}
+
+class CanvasManager {
+  #ctx;
+  #canvasEl;
+  #fontSize;
+  static DEFAULT_SETTER_OPTIONS = {
+    align: "center",
+    base: "bottom",
+    size: "10px",
+    fill: "white",
+    stroke: "black",
+    girth: 2,
+  };
+
+  constructor(canvas) {
+    this.#canvasEl = canvas;
+    this.#ctx = canvas.getContext("2d");
+    this.#fontSize = CanvasManager.DEFAULT_SETTER_OPTIONS.size;
+  }
+
+  #wrapText(context, text, x, y, maxWidth, lineHeight) {
+    var words = text.split(" ");
+    var line = "";
+
+    for (var n = 0; n < words.length; n++) {
+      var testLine = line + words[n] + " ";
+      var metrics = context.measureText(testLine);
+      var testWidth = metrics.width;
+      if (testWidth > maxWidth && n > 0) {
+        context.fillText(line, x, y);
+        line = words[n] + " ";
+        y += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    context.fillText(line, x, y);
+  }
+
+  setStyle(fontFamily, _options = CanvasManager.DEFAULT_SETTER_OPTIONS) {
+    let options = {
+      ...CanvasManager.DEFAULT_SETTER_OPTIONS,
+      ..._options,
+    };
+
+    this.#ctx.font = `${options.size}px ${fontFamily}`;
+    this.#ctx.fillStyle = options.fill;
+    this.#ctx.textAlign = options.align;
+    this.#ctx.textBaseline = options.base;
+    this.#ctx.strokeStyle = options.stroke;
+    this.#ctx.lineWidth = options.girth;
+    this.#fontSize = options.size;
+
+    console.log(this.#ctx);
+
+    return this;
+  }
+
+  setImage(imageEl) {
+    const canvas = this.#canvasEl;
+    this.#ctx.drawImage(imageEl, 0, 0, canvas.width, canvas.height);
+    return this;
+  }
+
+  drawText(
+    content,
+    x = 0,
+    y = 0,
+    _maxWidth = undefined,
+    _lineHeight = undefined
+  ) {
+    const ctx = this.#ctx;
+    const lh = _lineHeight ?? this.#fontSize * 1.4;
+    const maxWidth = _maxWidth ?? this.#canvasEl.width;
+
+    this.#wrapText(ctx, content, x, y, maxWidth, lh);
+
+    return this;
+  }
+}
+
+let canvasManager = new CanvasManager(canvas, ctx);
 
 image.onload = function (ev) {
   // delete and recreate canvas do untaint it
-  canvas.outerHTML = '';
-  canvas = document.createElement('canvas');
+  canvas.outerHTML = "";
+  canvas = document.createElement("canvas");
   canvasWrapper.appendChild(canvas);
-  ctx = canvas.getContext('2d');
-  document.getElementById('trueSize').click();
-  document.getElementById('trueSize').click();
-  
+  ctx = canvas.getContext("2d");
+  canvasManager = new CanvasManager(canvas, ctx);
+  document.getElementById("trueSize").click();
+  document.getElementById("trueSize").click();
   draw();
 };
 
-document.getElementById('imgURL').oninput = function(ev) {
-  image.src = this.value;
-};
-
-document.getElementById('imgFile').onchange = function(ev) {
+document.getElementById("imgFile").onchange = function (ev) {
   var reader = new FileReader();
-  reader.onload = function(ev) {
+  reader.onload = function (ev) {
     image.src = reader.result;
+    textPosition = DEFAULT_TEXT_POSITION;
   };
   reader.readAsDataURL(this.files[0]);
 };
 
-
-
-document.getElementById('textTop').oninput = function(ev) {
+document.getElementById("textTop").oninput = function (ev) {
   textTop = this.value;
   draw();
 };
 
-document.getElementById('textBottom').oninput = function(ev) {
-  textBottom = this.value;
+document.getElementById("textSizeTop").oninput = function (ev) {
+  let value = this.value;
+  textSizeTop = parseInt(value);
   draw();
+  const strValue = value < 10 ? `0${value}` : value.toString();
+  document.getElementById("textSizeTopOut").innerHTML = strValue;
 };
 
-
-
-document.getElementById('textSizeTop').oninput = function(ev) {
-  textSizeTop = parseInt(this.value);
-  draw();
-  document.getElementById('textSizeTopOut').innerHTML = this.value;
-};
-document.getElementById('textSizeBottom').oninput = function(ev) {
-  textSizeBottom = parseInt(this.value);
-  draw();
-  document.getElementById('textSizeBottomOut').innerHTML = this.value;
-};
-
-
-
-document.getElementById('trueSize').onchange = function(ev) {
-  if (document.getElementById('trueSize').checked) {
-    canvas.classList.remove('fullwidth');
+document.getElementById("trueSize").onchange = function (ev) {
+  if (document.getElementById("trueSize").checked) {
+    canvas.classList.remove("fullwidth");
   } else {
-    canvas.classList.add('fullwidth');
+    canvas.classList.add("fullwidth");
   }
 };
 
+document.getElementById("export").onclick = function () {
+  var img = canvas.toDataURL("image/png");
+  var link = document.createElement("a");
+  link.download = "My Meme";
+  link.href = img;
+  link.click();
 
-
-document.getElementById('export').onclick = function () {
-    var img = canvas.toDataURL('image/png');
-    var link = document.createElement("a");
-    link.download = 'My Meme';
-    link.href = img;
-    link.click();
-  
-    var win = window.open('', '_blank');
-    win.document.write('<img style="box-shadow: 0 0 1em 0 dimgrey;" src="' + img + '"/>');
-    win.document.write('<h1 style="font-family: Helvetica; font-weight: 300">Right Click > Save As<h1>');
-    win.document.body.style.padding = '1em';
+  var win = window.open("", "_blank");
+  win.document.write(
+    '<img style="box-shadow: 0 0 1em 0 dimgrey;" src="' + img + '"/>'
+  );
+  win.document.write(
+    '<h1 style="font-family: Helvetica; font-weight: 300">Right Click > Save As<h1>'
+  );
+  win.document.body.style.padding = "1em";
 };
 
-
-
-
-
-function style(font, size, align, base) {
-  ctx.font = size + 'px ' + font;
+function setContextStyle(ctx, font, size, align = "center", base = "bottom") {
+  ctx.font = size + "px " + font;
   ctx.textAlign = align;
   ctx.textBaseline = base;
 }
 
 function draw() {
-  // uppercase the text
-  var top = textTop.toUpperCase();
-  var bottom = textBottom.toUpperCase();
-  
   // set appropriate canvas size
   canvas.width = image.width;
   canvas.height = image.height;
-  
-  // draw the image
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-  
-  // styles
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = canvas.width*0.004;
-  
-  var _textSizeTop = textSizeTop/100*canvas.width;
-  var _textSizeBottom = textSizeBottom/100*canvas.width;
-  
-  // draw top text
-  style('Impact', _textSizeTop, 'center', 'bottom');
-  ctx.drawBreakingText(top, canvas.width/2, _textSizeTop+padding, null, 1, 'fill');
-  ctx.drawBreakingText(top, canvas.width/2, _textSizeTop+padding, null, 1, 'stroke');
 
-  // draw bottom text
-  style('Impact', _textSizeBottom, 'center', 'top');
-  var height = ctx.drawBreakingText(bottom, 0, 0, null, 1, 'none').textHeight;
-  console.log(ctx.drawBreakingText(bottom, 0, 0, null, 1, 'none'));
-  ctx.drawBreakingText(bottom, canvas.width/2, canvas.height-padding-height, null, 1, 'fill');
-  ctx.drawBreakingText(bottom, canvas.width/2, canvas.height-padding-height, null, 1, 'stroke');
+  // styles
+  ctx.fillStyle = "#fff";
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = canvas.width * 0.004;
+
+  var _textSizeTop = (textSizeTop / 250) * canvas.width;
+
+  canvasManager
+    .setImage(image)
+    .setStyle("Open Sans", {
+      size: _textSizeTop,
+      girth: 2,
+    })
+    .drawText(textTop, textPosition.left, textPosition.top, textPosition.max);
 }
 
+const tempalteManager = new TempalteManager(
+  "#templatesContainer",
+  "template-image"
+);
 
-
-
-
-image.src = 'https://imgflip.com/s/meme/The-Most-Interesting-Man-In-The-World.jpg';
-document.getElementById('textSizeTop').value = textSizeTop;
-document.getElementById('textSizeBottom').value = textSizeBottom;
-document.getElementById('textSizeTopOut').innerHTML = textSizeTop;
-document.getElementById('textSizeBottomOut').innerHTML = textSizeBottom;
+tempalteManager.load("/test.json").then(() => {
+  tempalteManager.pickTemplate(0);
+});
+document.getElementById("textSizeTop").value = textSizeTop;
+document.getElementById("textSizeTopOut").innerHTML = textSizeTop;
