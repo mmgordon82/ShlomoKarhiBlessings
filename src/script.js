@@ -273,6 +273,7 @@ const tempalteManager = new TempalteManager(
 tempalteManager.load("/templates.json").then(() => {
   tempalteManager.pickTemplate(0);
 });
+
 document.getElementById("textSizeTop").value = textSizeTop;
 document.getElementById("textSizeTopOut").innerHTML = textSizeTop;
 document.getElementById("textTop").value = textTop;
