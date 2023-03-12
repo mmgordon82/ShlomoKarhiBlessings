@@ -16,6 +16,14 @@ body{
  background-size: cover; 
 }
 
+@media screen and (max-width: 768px){
+  body{
+    background-position: top;
+    background-size: cover;
+    background-attachment: fixed;
+  }
+}
+
 .main-content{
   background-color: white;
   border: 1px #ccc solid;
