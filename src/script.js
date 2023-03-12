@@ -1,22 +1,24 @@
 // TODO: add templates like meme generator
 
-var canvas = document.getElementById("MainCanvas");
-var canvasWrapper = document.getElementById("canvasWrapper");
+const shareBtn = document.getElementById("Share");
+const errorBody = document.getElementById("MsgBody");
+let canvas = document.getElementById("MainCanvas");
+let canvasWrapper = document.getElementById("canvasWrapper");
 canvasWrapper.appendChild(canvas);
 canvas.width = 500;
 canvas.height = 500;
-var ctx = canvas.getContext("2d");
-var padding = 15;
-var textTop = "לכו לעזאזל כולכם";
-var textSizeTop = 20;
-var image = document.createElement("img");
+let ctx = canvas.getContext("2d");
+let padding = 15;
+let textTop = "לכו לעזאזל כולכם";
+let textSizeTop = 20;
+let image = document.createElement("img");
 
 const DEFAULT_TEXT_POSITION = {
-  top: 0,
-  left: 0,
-  max: canvas.width * .9
-}
-var textPosition = DEFAULT_TEXT_POSITION;
+  top: 150,
+  left: 550,
+  max: canvas.width * 2.3,
+};
+let textPosition = DEFAULT_TEXT_POSITION;
 
 class TempalteManager {
   #container;
@@ -38,20 +40,20 @@ class TempalteManager {
       .then((res) => res.forEach(this.addTemplate));
   }
 
-  pickTemplate(index){
+  pickTemplate(index) {
     let data = this.#dataList[index];
-    if(!data) return;
+    if (!data) return;
     this.#_pickTemplate(data.url, data.textPosition);
   }
 
   #_pickTemplate = (url, newTextPosition) => {
     image.src = url;
     textPosition = newTextPosition;
-  }
+  };
 
   addTemplate = (data) => {
     this.#dataList.push(data);
-    const { id, url, textPosition } = data
+    const { id, url, textPosition } = data;
     //input
     const input = document.createElement("input");
     input.hidden = true;
@@ -117,13 +119,13 @@ class CanvasManager {
   }
 
   #wrapText(context, text, x, y, maxWidth, lineHeight) {
-    var words = text.split(" ");
-    var line = "";
+    let words = text.split(" ");
+    let line = "";
 
-    for (var n = 0; n < words.length; n++) {
-      var testLine = line + words[n] + " ";
-      var metrics = context.measureText(testLine);
-      var testWidth = metrics.width;
+    for (let n = 0; n < words.length; n++) {
+      let testLine = line + words[n] + " ";
+      let metrics = context.measureText(testLine);
+      let testWidth = metrics.width;
       if (testWidth > maxWidth && n > 0) {
         context.fillText(line, x, y);
         line = words[n] + " ";
@@ -177,12 +179,12 @@ class CanvasManager {
 
 let canvasManager = new CanvasManager(canvas, ctx);
 
-function updateCanvas(){
-    // delete and recreate canvas do untaint it
+function updateCanvas() {
+  // delete and recreate canvas do untaint it
   canvas.outerHTML = "";
   canvas = document.createElement("canvas");
   canvasWrapper.appendChild(canvas);
-  canvas.classList.add('w-full', 'max-w-[500px]', 'max-h-[800px]');
+  canvas.classList.add("w-full", "max-w-[500px]", "max-h-[800px]");
   ctx = canvas.getContext("2d");
   canvasManager = new CanvasManager(canvas, ctx);
   draw();
@@ -191,7 +193,7 @@ function updateCanvas(){
 image.onload = updateCanvas;
 
 document.getElementById("imgFile").onchange = function (ev) {
-  var reader = new FileReader();
+  let reader = new FileReader();
   reader.onload = function (ev) {
     image.src = reader.result;
     textPosition = DEFAULT_TEXT_POSITION;
@@ -213,13 +215,13 @@ document.getElementById("textSizeTop").oninput = function (ev) {
 };
 
 document.getElementById("export").onclick = function () {
-  var img = canvas.toDataURL("image/png");
-  var link = document.createElement("a");
+  let img = canvas.toDataURL("image/png");
+  let link = document.createElement("a");
   link.download = "My Meme";
   link.href = img;
   link.click();
 
-  var win = window.open("", "_blank");
+  let win = window.open("", "_blank");
   win.document.write(
     '<img style="box-shadow: 0 0 1em 0 dimgrey;" src="' + img + '"/>'
   );
@@ -245,7 +247,7 @@ function draw() {
   ctx.strokeStyle = "#000";
   ctx.lineWidth = canvas.width * 0.004;
 
-  var _textSizeTop = (textSizeTop / 250) * canvas.width;
+  let _textSizeTop = (textSizeTop / 250) * canvas.width;
 
   canvasManager
     .setImage(image)
@@ -254,6 +256,34 @@ function draw() {
       girth: 2,
     })
     .drawText(textTop, textPosition.left, textPosition.top, textPosition.max);
+}
+
+async function extractSharable(canvasEl = canvas) {
+  const url = canvasEl.toDataURL();
+  const fetched_url = await fetch(url);
+  const blob = await fetched_url.blob();
+  const files = [
+    new File([blob], "Blessing.png", {
+      type: blob.type,
+      lastModified: Date.now(),
+    }),
+  ];
+
+  return { files };
+}
+
+async function share(payload) {
+  if (!navigator.canShare(payload)) return false;
+  try {
+    await navigator.share(payload);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function error(msg){
+  errorBody.textContent = `*${msg}`;
 }
 
 const tempalteManager = new TempalteManager(
@@ -269,3 +299,13 @@ document.getElementById("textSizeTop").value = textSizeTop;
 document.getElementById("textSizeTopOut").innerHTML = textSizeTop;
 document.getElementById("textTop").value = textTop;
 updateCanvas();
+
+shareBtn.addEventListener("click", async () => {
+  let content = await extractSharable();
+  try{
+    await share(content);
+  }
+  catch(e){
+    error('Could not share');
+  }
+});

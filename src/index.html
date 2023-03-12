@@ -13,7 +13,7 @@
             },
             fontFamily: {
               roboto: ["Roboto", "ui-sans-serif", "system-ui"],
-            },
+            }
           },
         },
       };
@@ -112,16 +112,27 @@
           />
         </section>
         <section class="mb-5">
-          <button
+          <div class="flex justify-center gap-7 align-center">
+            <button
             id="export"
             dir="ltr"
-            class="block m-auto w-2/3 px-8 py-4 text-white font-semibold bg-green-500 hover:bg-green-600 focus:bg-green-600 rounded-lg"
+            class="block px-8 py-4 text-white font-semibold bg-green-500 hover:bg-green-600 focus:bg-green-600 rounded-lg"
           >
             הורדה
           </button>
+
+          <button
+            id="Share"
+            dir="ltr"
+            class="grid place-items-center w-12 h-12 text-white text-lg bg-israel hover:bg-blue-600 focus:bg-blue-600 rounded-[50%] self-center"
+          >
+            <i class="fa-solid fa-share-nodes"></i>
+          </button>
+          </div>
           <p class="text-gray-500 w-full mt-2">
             *אם הכפתור לא עובד, לחצו מקש ימני על המימ ושמרו את התמונה ידנית.
           </p>
+          <p id="MsgBody" class="text-red-600 font-bold"></p>
         </section>
       </section>
 
